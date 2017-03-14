@@ -53,6 +53,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
      * 维护表名与成员变量的对应关系
      */
     private void initCacheMap() {
+        cacheMap = new HashMap<>();
         String sql = "select * from "+this.tableName+" limit 1,0";
         Cursor cursor = null;
         try{

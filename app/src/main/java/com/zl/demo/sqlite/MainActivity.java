@@ -15,6 +15,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         baseDao = BaseDaoFactory.getInstance().getDataHelper(UserDao.class,User.class);
+//        openOrCreateDatabase("test.db",0,null);
     }
 
     public void save(View view){

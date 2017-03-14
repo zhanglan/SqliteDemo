@@ -4,6 +4,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
+
 /**
  * Created by Administrator on 2017/3/13 0013.
  */
@@ -14,10 +16,10 @@ public class BaseDaoFactory {
 
     private SQLiteDatabase db;
 
-    private static BaseDaoFactory instance = new BaseDaoFactory();
+    private static BaseDaoFactory instance = null;
 
     private BaseDaoFactory(){
-        sqliteDatabasePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/demo.db";
+        sqliteDatabasePath = "/data/data/com.zl.demo.sqlite/datebases/";
         Log.d(Tag,"sqliteDatabasePath-->"+sqliteDatabasePath);
         openDatabase();
     }
@@ -37,10 +39,21 @@ public class BaseDaoFactory {
     }
 
     private void openDatabase() {
-        this.db = SQLiteDatabase.openOrCreateDatabase(sqliteDatabasePath,null);
+        File dir = new File(sqliteDatabasePath);
+        if(!dir.exists()){
+           dir.mkdirs();
+        }
+        File dbFile = new File(sqliteDatabasePath+"demo.db");
+        if(!dbFile.exists()){
+            Log.d(Tag,"1111");
+        }
+        this.db = SQLiteDatabase.openOrCreateDatabase(sqliteDatabasePath+"demo.db",null);
     }
 
     public static BaseDaoFactory getInstance(){
+        if(instance==null){
+            instance = new BaseDaoFactory();
+        }
         return instance;
     }
 
