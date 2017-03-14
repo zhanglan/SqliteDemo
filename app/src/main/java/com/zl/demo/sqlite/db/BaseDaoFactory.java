@@ -2,13 +2,14 @@ package com.zl.demo.sqlite.db;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
+import android.util.Log;
 
 /**
  * Created by Administrator on 2017/3/13 0013.
  */
 
 public class BaseDaoFactory {
-
+    private static final String Tag = BaseDaoFactory.class.getSimpleName();
     private String sqliteDatabasePath;
 
     private SQLiteDatabase db;
@@ -16,7 +17,8 @@ public class BaseDaoFactory {
     private static BaseDaoFactory instance = new BaseDaoFactory();
 
     private BaseDaoFactory(){
-        sqliteDatabasePath = Environment.getDataDirectory().getAbsolutePath()+"demo.db";
+        sqliteDatabasePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/demo.db";
+        Log.d(Tag,"sqliteDatabasePath-->"+sqliteDatabasePath);
         openDatabase();
     }
 
