@@ -67,4 +67,6 @@ public interface IBaseDao<T> {
      * @return
      */
     List<T> query(String sql);
+
+    String rawQuery(String sql);
 }

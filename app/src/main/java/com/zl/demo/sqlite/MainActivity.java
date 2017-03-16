@@ -10,6 +10,8 @@ import com.zl.demo.sqlite.db.BaseDaoFactory;
 import com.zl.demo.sqlite.db.IBaseDao;
 import com.zl.demo.sqlite.db.annotion.DbField;
 
+import java.util.List;
+
 public class MainActivity extends Activity {
     private static final String Tag = MainActivity.class.getSimpleName();
     IBaseDao<User> baseDao;
@@ -24,7 +26,7 @@ public class MainActivity extends Activity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                User user = new User("123","123456");
+                User user = new User();
                 Long start = System.currentTimeMillis();
                 Log.e("MainActivity","开始插入");
                 for(int i=0; i<10; i++){
@@ -49,7 +51,7 @@ public class MainActivity extends Activity {
     public void updateSql(View view){
         User value = new User();
         value.setPassword("bbbb");
-        String where = " 1=1 and name='123' ";
+        String where = " 1=1 and name<20 ";
         int result = baseDao.update(value,where);
         Log.e(Tag, "updateSql result-->"+result);
     }
@@ -65,5 +67,28 @@ public class MainActivity extends Activity {
         String where = " 1=1 and name<20";
         int result = baseDao.delete(where);
         Log.e(Tag, "deleteSql result-->"+result);
+    }
+
+    public void query(View view){
+        User where = new User();
+        where.setPassword("123456");
+        List<User> list = baseDao.query(where);
+        for(User u: list){
+            Log.i(Tag,"name-->"+u.getName()+"   password-->"+u.getPassword());
+        }
+    }
+
+    public void querySql(View view){
+        String sql = "select name from tb_user where name<20";
+        List<User> list = baseDao.query(sql);
+        for(User u: list){
+            Log.i(Tag,"name-->"+u.getName()+"   password-->"+u.getPassword());
+        }
+    }
+
+    public void rawQuery(View view){
+        String sql = "select * from tb_user where name<20";
+        String res = baseDao.rawQuery(sql);
+        Log.i(Tag, "rawQuery result-->"+res);
     }
 }

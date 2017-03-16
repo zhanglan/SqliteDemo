@@ -8,6 +8,10 @@ import android.util.Log;
 
 import com.zl.demo.sqlite.db.annotion.DbField;
 import com.zl.demo.sqlite.db.annotion.DbTable;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -130,12 +134,105 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
 
     @Override
     public List<T> query(T where, String orderBy, Integer startIndex, Integer limit) {
-        return null;
+        Map<String, String> map = getValues(where);
+        Condition condition = new Condition(map);
+        String limitString = null;
+        if(startIndex!=null && limit!=null){
+            limitString = startIndex + " , " +limit;
+        }
+
+        Cursor cursor = db.query(tableName,null,condition.getWhereClause(),condition.getWhereArgs(),null,null,orderBy,limitString);
+        List<T> result = getResult(cursor);
+        return result;
     }
 
     @Override
     public List<T> query(String sql) {
-        return null;
+        Cursor cursor = db.rawQuery(sql,null);
+        List<T> result = getResult(cursor);
+        return result;
+    }
+
+    @Override
+    public String rawQuery(String sql) {
+        Cursor cursor = db.rawQuery(sql,null);
+        String res = getRawResult(cursor);
+        return res;
+    }
+
+    private String getRawResult(Cursor cursor){
+        JSONArray array = new JSONArray();
+        try{
+            while (cursor.moveToNext()){
+                JSONObject jo = new JSONObject();
+                int columnCount = cursor.getColumnCount();
+                for(int i=0;i<columnCount;i++){
+                    int type = cursor.getType(i);
+                    switch (type){
+                        case Cursor.FIELD_TYPE_STRING:
+                            jo.put(cursor.getColumnName(i),cursor.getString(i));
+                            break;
+                        case Cursor.FIELD_TYPE_INTEGER:
+                            jo.put(cursor.getColumnName(i),cursor.getInt(i));
+                            break;
+                        case Cursor.FIELD_TYPE_FLOAT:
+                            jo.put(cursor.getColumnName(i),cursor.getFloat(i));
+                            break;
+                        case Cursor.FIELD_TYPE_NULL:
+                            jo.put(cursor.getColumnName(i),"");
+                            break;
+                        case Cursor.FIELD_TYPE_BLOB:
+                            jo.put(cursor.getColumnName(i),"");
+                            break;
+                    }
+                }
+                array.put(jo);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(cursor!=null){
+                cursor.close();
+            }
+        }
+        return array.toString();
+    }
+
+    private List<T> getResult(Cursor cursor) {
+        List<T> list = new ArrayList<>();
+        try{
+            while (cursor.moveToNext()){
+                T item = (T) entityClass.newInstance();
+                Iterator iterator = cacheMap.entrySet().iterator();
+                while(iterator.hasNext()){
+                    Map.Entry entry = (Map.Entry) iterator.next();
+                    String columnName = (String) entry.getKey();
+                    Integer columnIndex = cursor.getColumnIndex(columnName);
+                    if(columnIndex<0) continue;
+                    Field field = (Field) entry.getValue();
+                    Class type = field.getType();
+                    if(type==String.class){
+                        field.set(item,cursor.getString(columnIndex));
+                    }else if(type == Integer.class){
+                        field.set(item,cursor.getInt(columnIndex));
+                    }else if(type == Double.class){
+                        field.set(item,cursor.getDouble(columnIndex));
+                    }else if(type == byte[].class){
+                        field.set(item,cursor.getBlob(columnIndex));
+                    }else{
+                        continue;
+                    }
+                }
+                list.add(item);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(cursor!=null){
+                cursor.close();
+            }
+        }
+        return list;
     }
 
     private ContentValues getContentValues(Map<String, String> map) {
