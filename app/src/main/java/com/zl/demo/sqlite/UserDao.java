@@ -9,6 +9,6 @@ import com.zl.demo.sqlite.db.BaseDao;
 public class UserDao extends BaseDao {
     @Override
     protected String createTable() {
-        return "create table if not exists tb_user(name char(10),password char(20))";
+        return "create table if not exists tb_user(name integer primary key,password text)";
     }
 }

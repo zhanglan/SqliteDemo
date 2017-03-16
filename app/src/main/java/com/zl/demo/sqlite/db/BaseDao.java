@@ -9,8 +9,10 @@ import android.util.Log;
 import com.zl.demo.sqlite.db.annotion.DbField;
 import com.zl.demo.sqlite.db.annotion.DbTable;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -59,7 +61,6 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
         try{
             cursor = db.rawQuery(sql, null);
             String[] columnNames = cursor.getColumnNames();
-
             Field[] fields = entityClass.getDeclaredFields();
             for(String columnName:columnNames){
                 String fieldName = null;
@@ -92,6 +93,51 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
         return result;
     }
 
+    @Override
+    public int update(T entity, T where) {
+        ContentValues values = getContentValues(getValues(entity));
+        Map<String,String> whereMap = getValues(where);
+        Condition condition = new Condition(whereMap);
+        int result = db.update(tableName,values,condition.getWhereClause(),condition.getWhereArgs());
+        return result;
+    }
+
+    @Override
+    public int update(T entity, String where) {
+        ContentValues values = getContentValues(getValues(entity));
+        int result = db.update(tableName,values,where,null);
+        return result;
+    }
+
+    @Override
+    public int delete(T where) {
+        Map<String,String> whereMap = getValues(where);
+        Condition condition = new Condition(whereMap);
+        int result = db.delete(tableName,condition.getWhereClause(),condition.getWhereArgs());
+        return result;
+    }
+
+    @Override
+    public int delete(String where) {
+        int result = db.delete(tableName,where,null);
+        return result;
+    }
+
+    @Override
+    public List<T> query(T where) {
+        return query(where,null,null,null);
+    }
+
+    @Override
+    public List<T> query(T where, String orderBy, Integer startIndex, Integer limit) {
+        return null;
+    }
+
+    @Override
+    public List<T> query(String sql) {
+        return null;
+    }
+
     private ContentValues getContentValues(Map<String, String> map) {
         ContentValues contentValues = new ContentValues();
         Set<String> keys = map.keySet();
@@ -104,11 +150,6 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
             }
         }
         return contentValues;
-    }
-
-    @Override
-    public Long update(T entity, T where) {
-        return null;
     }
 
     protected abstract String createTable();
@@ -137,5 +178,36 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
             result.put(cacheKey, cacheValue);
         }
         return result;
+    }
+
+    class Condition{
+        private String whereClause;
+        private String[] whereArgs;
+
+        public Condition(Map<String, String> whereMap) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(" 1=1 ");
+            Set<String> kes = whereMap.keySet();
+            Iterator<String> iterator = kes.iterator();
+            ArrayList<String> list = new ArrayList<>();
+            while (iterator.hasNext()){
+                String key = iterator.next();
+                String value = whereMap.get(key);
+                if(null!=value){
+                    stringBuilder.append(" and "+key+"=? ");
+                    list.add(value);
+                }
+            }
+            this.whereClause = stringBuilder.toString();
+            this.whereArgs = list.toArray(new String[list.size()]);
+        }
+
+        public String getWhereClause() {
+            return whereClause;
+        }
+
+        public String[] getWhereArgs() {
+            return whereArgs;
+        }
     }
 }

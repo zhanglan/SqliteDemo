@@ -5,6 +5,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Administrator on 2017/3/13 0013.
@@ -19,7 +20,8 @@ public class BaseDaoFactory {
     private static BaseDaoFactory instance = null;
 
     private BaseDaoFactory(){
-        sqliteDatabasePath = "/data/data/com.zl.demo.sqlite/datebases/";
+//        sqliteDatabasePath = "/data/data/com.zl.demo.sqlite/datebases/";
+        sqliteDatabasePath = Environment.getExternalStorageDirectory().getPath()+"/inspur";
         Log.d(Tag,"sqliteDatabasePath-->"+sqliteDatabasePath);
         openDatabase();
     }
@@ -39,15 +41,15 @@ public class BaseDaoFactory {
     }
 
     private void openDatabase() {
-        File dir = new File(sqliteDatabasePath);
-        if(!dir.exists()){
-           dir.mkdirs();
-        }
-        File dbFile = new File(sqliteDatabasePath+"demo.db");
+        File dbFile = new File(sqliteDatabasePath+"/demo.db");
+        File logFile = new File(sqliteDatabasePath+"/demo.log");
         if(!dbFile.exists()){
-            Log.d(Tag,"1111");
+            createDipPath(sqliteDatabasePath+"/demo.db");
         }
-        this.db = SQLiteDatabase.openOrCreateDatabase(sqliteDatabasePath+"demo.db",null);
+        if(!logFile.exists()){
+            createDipPath(sqliteDatabasePath+"/demo.log");
+        }
+        this.db = SQLiteDatabase.openOrCreateDatabase(sqliteDatabasePath+"/demo.db",null);
     }
 
     public static BaseDaoFactory getInstance(){
@@ -55,6 +57,20 @@ public class BaseDaoFactory {
             instance = new BaseDaoFactory();
         }
         return instance;
+    }
+
+    private void createDipPath(String file) {
+        String parentFile = file.substring(0, file.lastIndexOf("/"));
+        File file1 = new File(file);
+        File parent = new File(parentFile);
+        if (!file1.exists()) {
+            parent.mkdirs();
+            try {
+                file1.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }
